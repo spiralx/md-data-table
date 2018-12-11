@@ -9,9 +9,18 @@ function mdColumn($compile, $mdUtil) {
     return postLink;
   }
 
+  function MdColumnController() {
+
+  }
+
   function postLink(scope, element, attrs, ctrls) {
+    var columnCtrl = ctrls.shift();
+    var rowCtrl = ctrls.shift();
     var headCtrl = ctrls.shift();
     var tableCtrl = ctrls.shift();
+
+    columnCtrl.columnIndex = rowCtrl.getIndex();
+    // console.log(`columnCtrl.columnIndex = %d`, columnCtrl.columnIndex, element[0], columnCtrl, rowCtrl)
 
     function attachSortIcon() {
       var sortIcon = angular.element('<md-icon md-svg-icon="arrow-up.svg">');
@@ -69,8 +78,8 @@ function mdColumn($compile, $mdUtil) {
       });
     }
 
-    function updateColumn(index, column) {
-      tableCtrl.$$columns[index] = column;
+    function updateColumn(column) {
+      tableCtrl.$$columns[ columnCtrl.columnIndex ] = column;
 
       if(column.numeric) {
         element.addClass('md-numeric');
@@ -95,12 +104,10 @@ function mdColumn($compile, $mdUtil) {
       }
     });
 
-    scope.$watch(getIndex, function (index) {
-      updateColumn(index, {'numeric': isNumeric()});
-    });
+    updateColumn({ numeric: isNumeric() })
 
     scope.$watch(isNumeric, function (numeric) {
-      updateColumn(getIndex(), {'numeric': numeric});
+      updateColumn({ numeric: numeric });
     });
 
     scope.$watch('orderBy', function (orderBy) {
@@ -115,8 +122,10 @@ function mdColumn($compile, $mdUtil) {
   }
 
   return {
+    controller: MdColumnController,
+    controllerAs: '$mdColumn',
     compile: compile,
-    require: ['^^mdHead', '^^mdTable'],
+    require: ['mdColumn', '^^mdRow', '^^mdHead', '^^mdTable'],
     restrict: 'A',
     scope: {
       numeric: '=?mdNumeric',
